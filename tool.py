@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from PIL import Image
 import os
-# import sys
+import sys
 import json
 from datetime import datetime
 from ImageProcess import Graphics
@@ -29,7 +29,7 @@ def directory_exists(directory):
 
 def list_img_file(directory):
     """列出目录下所有文件，并筛选出图片文件列表返回"""
-    old_list = os.listdir(directory)
+    # old_list = os.listdir(directory)
     img_type = ["jpg", "jpeg", "png", "gif"]
 
     new_list = []
@@ -54,13 +54,23 @@ def list_img_file(directory):
 def print_help():
     print(
         """
-        This program helps compress many image files
-        you can choose which scale you want to compress your img(jpg/png/etc)
+    This program helps compress many image files
+    you can choose which scale you want to compress your img(jpg/png/etc)
         1) normal compress(4M to 1M around)
         2) small compress(4M to 500K around)
         3) smaller compress(4M to 300K around)
+        4) smallest compress(unkown)
         """
     )
+    num = 4
+    try:
+        print('请输入压缩模式:')
+        num = int(sys.stdin.readline().strip())
+        print(f"你的选择是：{num}")
+    except Exception as e:
+        print(e)
+
+    return num
 
 
 def compress(choose, des_dir, src_dir, file_list):
@@ -72,13 +82,13 @@ def compress(choose, des_dir, src_dir, file_list):
     choose: str
         选择压缩的比例，有4个选项，越大压缩后的图片越小
     """
-    if choose == '1':
+    if choose == 1:
         scale = SIZE_normal
-    if choose == '2':
+    if choose == 2:
         scale = SIZE_small
-    if choose == '3':
+    if choose == 3:
         scale = SIZE_more_small
-    if choose == '4':
+    if choose == 4:
         scale = SIZE_more_small_small
     for infile in file_list:
         img = Image.open(src_dir+infile)
@@ -87,12 +97,14 @@ def compress(choose, des_dir, src_dir, file_list):
         img.thumbnail((int(w/scale), int(h/scale)))
         tagPath = des_dir + infile
         fileDir = os.sep.join(tagPath.split(os.sep)[:-1])
-        if not directory_exists(fileDir):
-            make_directory(fileDir)
         print(f'save des_dir: => {des_dir}')
         print(f'save infile: => {infile}')
         print(f'save fileDir: => {fileDir}')
         print(f'save minipath: => {tagPath}')
+
+        if fileDir and not directory_exists(fileDir):
+            make_directory(fileDir)
+
         img.save(tagPath)
 
 
@@ -123,7 +135,9 @@ def compress_photo():
             file_list_src.remove(file_list_des[i])
     if len(file_list_src) == 0:
         print("=====没有新文件需要压缩=======")
-    compress('4', des_dir, src_dir, file_list_src)
+
+    num = print_help()
+    compress(num, des_dir, src_dir, file_list_src)
 
 
 def handle_photo():
@@ -191,9 +205,9 @@ def cut_photo() -> bool:
         file_list = list_img_file(src_dir)
         # print file_list
         if file_list:
-            print_help()
+            # num = print_help()
             for infile in file_list:
-                img = Image.open(src_dir+infile)
+                # img = Image.open(src_dir+infile)
                 Graphics(infile=src_dir+infile,
                          outfile=src_dir + infile).cut_by_ratio()
         else:
