@@ -37,7 +37,7 @@ def list_img_file(directory):
     for root, dirs, files in os.walk(directory):
         for file in files:
             filepath = os.path.join(root, file)[len(directory):]
-            print(f'filename: => {file} | filepath: => {filepath}')
+            # print(f'filename: => {file} | filepath: => {filepath}')
             name, fileformat = file.split(".")
             if fileformat.lower() in img_type:
                 new_list.append(filepath)
@@ -97,13 +97,11 @@ def compress(choose, des_dir, src_dir, file_list):
         img.thumbnail((int(w/scale), int(h/scale)))
         tagPath = des_dir + infile
         fileDir = os.sep.join(tagPath.split(os.sep)[:-1])
-        print(f'save des_dir: => {des_dir}')
-        print(f'save infile: => {infile}')
-        print(f'save fileDir: => {fileDir}')
-        print(f'save minipath: => {tagPath}')
 
+        # 子目录创建
         if fileDir and not directory_exists(fileDir):
             make_directory(fileDir)
+        print(f"infile: {infile} ===> tagPath: {tagPath}")
 
         img.save(tagPath)
 
@@ -149,10 +147,17 @@ def handle_photo():
     src_dir, des_dir = "photos/", "min_photos/"
     file_list = list_img_file(src_dir)
     list_info = []
-    file_list.sort(key=lambda x: x.split('_')[0])   # 按照日期排序
+    file_list.sort(key=lambda x: x.split(os.sep)[-1].split('_')[0])   # 按照日期排序
+
     for i in range(len(file_list)):
         filename = file_list[i]
-        date_str, info = filename.split("_")
+        date_info, info = filename.split("_")
+
+        if len(date_info.split(os.sep)) == 2:
+            _dir, date_str = date_info.split(os.sep)
+        else:
+            date_str = date_info
+
         info, _ = info.split(".")
         date = datetime.strptime(date_str, "%Y-%m-%d")
         year_month = date_str[0:7]
