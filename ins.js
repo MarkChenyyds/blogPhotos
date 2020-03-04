@@ -114,6 +114,9 @@
       var ulTmpl = "";
       for (var j = 0, len2 = res.list.length; j < len2; j++) {
         var data = res.list[j].arr;
+        // 测试2
+        console.log('data =>:' + JSON.stringify(data));
+
         var liTmpl = "";
         for (var i = 0, len = data.link.length; i < len; i++) {
           var minSrc = 'https://github.com/YaoJusheng/blog_photos/master/min_photos/' + data.link[i];
@@ -174,6 +177,9 @@
         xhr.onload = function() {
           if (this.status >= 200 && this.status < 300) {
             var res = JSON.parse(this.response);
+            // 测试1
+            console.log('resdata =>:' + JSON.stringify(res));
+
             searchData = res;
             success(searchData);
           } else {

@@ -30,13 +30,24 @@ def directory_exists(directory):
 def list_img_file(directory):
     """列出目录下所有文件，并筛选出图片文件列表返回"""
     old_list = os.listdir(directory)
-    # print old_list
+    img_type = ["jpg", "jpeg", "png", "gif"]
+
     new_list = []
-    for filename in old_list:
-        name, fileformat = filename.split(".")
-        if fileformat.lower() == "jpg" or fileformat.lower() == "png" or fileformat.lower() == "gif":
-            new_list.append(filename)
-    # print new_list
+
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            filepath = os.path.join(root, file)[len(directory):]
+            print(f'filename: => {file} | filepath: => {filepath}')
+            name, fileformat = file.split(".")
+            if fileformat.lower() in img_type:
+                new_list.append(filepath)
+
+    # for filename in old_list:
+    #     print('filename: => ', filename)
+    #     name, fileformat = filename.split(".")
+    #     if fileformat.lower() in img_type:
+    #         new_list.append(filename)
+
     return new_list
 
 
@@ -74,7 +85,15 @@ def compress(choose, des_dir, src_dir, file_list):
         # size_of_file = os.path.getsize(infile)
         w, h = img.size
         img.thumbnail((int(w/scale), int(h/scale)))
-        img.save(des_dir + infile)
+        tagPath = des_dir + infile
+        fileDir = os.sep.join(tagPath.split(os.sep)[:-1])
+        if not directory_exists(fileDir):
+            make_directory(fileDir)
+        print(f'save des_dir: => {des_dir}')
+        print(f'save infile: => {infile}')
+        print(f'save fileDir: => {fileDir}')
+        print(f'save minipath: => {tagPath}')
+        img.save(tagPath)
 
 
 def compress_photo():
@@ -83,16 +102,21 @@ def compress_photo():
     '''
     src_dir, des_dir = "photos/", "min_photos/"
 
-    if directory_exists(src_dir):
-        if not directory_exists(src_dir):
-            make_directory(src_dir)
+    file_list_src, file_list_des = [], []
+
+    # photos 目录判断
+    if not directory_exists(src_dir):
+        make_directory(src_dir)
+    else:
         # business logic
         file_list_src = list_img_file(src_dir)
+
+    # min_photos 目录判断
     if directory_exists(des_dir):
-        if not directory_exists(des_dir):
-            make_directory(des_dir)
         file_list_des = list_img_file(des_dir)
-        # print file_list
+    else:
+        make_directory(des_dir)
+
     '''如果已经压缩了，就不再压缩'''
     for i in range(len(file_list_des)):
         if file_list_des[i] in file_list_src:
@@ -153,17 +177,16 @@ def handle_photo():
         json.dump(final_dict, fp)
 
 
-def cut_photo():
+def cut_photo() -> bool:
     """
     裁剪算法
 
     ----------
     调用Graphics类中的裁剪算法，将src_dir目录下的文件进行裁剪（裁剪成正方形）
     """
+    flag = True
     src_dir = "photos/"
     if directory_exists(src_dir):
-        if not directory_exists(src_dir):
-            make_directory(src_dir)
         # business logic
         file_list = list_img_file(src_dir)
         # print file_list
@@ -171,11 +194,14 @@ def cut_photo():
             print_help()
             for infile in file_list:
                 img = Image.open(src_dir+infile)
-                Graphics(infile=src_dir+infile, outfile=src_dir + infile).cut_by_ratio()
+                Graphics(infile=src_dir+infile,
+                         outfile=src_dir + infile).cut_by_ratio()
         else:
             pass
     else:
+        flag = False
         print("source directory not exist!")
+    return flag
 
 
 def git_operation():
@@ -190,8 +216,14 @@ def git_operation():
     os.system('git push origin master')
 
 
+def main():
+    """主程序入口"""
+    res = cut_photo()        # 裁剪图片，裁剪成正方形，去中间部分
+    if res:
+        compress_photo()   # 压缩图片，并保存到 mini_photos 文件夹下
+        git_operation()    # 提交到 github/gitee 仓库
+        handle_photo()     # 将文件处理成 json 格式，存到博客仓库中
+
+
 if __name__ == "__main__":
-    cut_photo()        # 裁剪图片，裁剪成正方形，去中间部分
-    compress_photo()   # 压缩图片，并保存到mini_photos文件夹下
-    git_operation()    # 提交到github仓库
-    handle_photo()     # 将文件处理成json格式，存到博客仓库中
+    main()
